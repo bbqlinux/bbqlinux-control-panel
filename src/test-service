@@ -1,0 +1,10 @@
+#!/bin/bash
+
+sudo rm -rf /usr/bin/bbqlinux-control-panel
+sudo rm -rf /usr/lib/bbqlinux-control-panel
+sudo rm -rf /usr/share/bbqlinux-control-panel
+
+sudo cp -R etc /
+sudo cp -R usr /
+
+python3 /usr/bin/bbqlinux-control-panel-service

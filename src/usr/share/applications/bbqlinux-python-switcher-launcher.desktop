@@ -1,0 +1,9 @@
+[Desktop Entry]
+Name=BBQLinux Control Panel
+GenericName=BBQLinux Control Panel
+Comment=Configure BBQLinux
+Exec=/usr/bin/bbqlinux-control-panel
+Icon=bbqlinux_icon_blue_48x48
+Terminal=False
+Type=Application
+Categories=System;

@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE policyconfig PUBLIC
+ "-//freedesktop//DTD PolicyKit Policy Configuration 1.0//EN"
+ "http://www.freedesktop.org/standards/PolicyKit/1.0/policyconfig.dtd">
+ <!-- To the extent possible under law, David D. Lowe has waived all 
+ copyright and related or neighboring rights to this file.
+ License: http://creativecommons.org/publicdomain/zero/1.0/ -->
+<policyconfig>
+
+    <vendor>The BBQLinux Project</vendor>
+    <vendor_url>http://bbqlinux.org/</vendor_url>
+
+    <action id="org.bbqlinux.ControlPanel">
+        <description>Run BBQLinux Control Panel as root</description>
+        <message>Authentication is required to run the BBQLinux Control Panel as root</message>
+        <defaults>
+            <allow_any>no</allow_any>
+            <allow_inactive>no</allow_inactive>
+            <allow_active>auth_admin_keep</allow_active>
+        </defaults>
+        <annotate key="org.freedesktop.policykit.exec.path">/usr/bin/bbqlinux-control-panel</annotate>
+        <annotate key="org.freedesktop.policykit.exec.allow_gui">true</annotate>
+    </action>
+
+</policyconfig>

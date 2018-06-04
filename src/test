@@ -1,0 +1,12 @@
+#!/bin/bash
+
+pyrcc4 -py3 -o usr/share/bbqlinux-control-panel/qt_resources_rc.py usr/share/bbqlinux-control-panel/qt_resources.qrc
+
+sudo rm -rf /usr/bin/bbqlinux-control-panel
+sudo rm -rf /usr/lib/bbqlinux-control-panel
+sudo rm -rf /usr/share/bbqlinux-control-panel
+
+sudo cp -R etc /
+sudo cp -R usr /
+
+su codeworkx -c "/usr/bin/bbqlinux-control-panel"

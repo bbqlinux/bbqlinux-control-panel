@@ -1,0 +1,98 @@
+#! /usr/bin/env python3
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+#
+
+import sys
+sys.path.append('/usr/lib/bbqlinux-control-panel')
+import os
+import dbus.service
+import dbus.mainloop.glib
+import settings
+
+from gi.repository import GLib
+
+from java_switcher import JavaSwitcher
+from python_switcher import PythonSwitcher
+
+class PermissionDeniedByPolicy(dbus.DBusException):
+    _dbus_error_name = 'com.bbqlinux.ControlPanel.PermissionDeniedByPolicy'
+
+class BBQLinuxControlPanel(dbus.service.Object):
+
+    def __init__(self, bus):
+        dbus.service.Object.__init__(self, bus)
+
+        self.system_bus = bus
+        self.proxy = None
+        self.dbus_info = None
+        self.polkit = None
+
+    def check_polkit_privilege(self, sender, conn, privilege):
+
+        if sender is None and conn is None:
+            # called locally, not through D-BUS
+            return
+
+        # query PolicyKit
+        if self.proxy is None:
+            self.proxy = self.system_bus.get_object('org.freedesktop.PolicyKit1', 
+                '/org/freedesktop/PolicyKit1/Authority')
+
+        if self.polkit is None:
+            self.polkit = dbus.Interface(self.proxy, 
+                dbus_interface='org.freedesktop.PolicyKit1.Authority')
+
+        # get pid of sender
+        dbus_info = dbus.Interface(conn.get_object('org.freedesktop.DBus', 
+                '/org/freedesktop/DBus', False), 'org.freedesktop.DBus')
+        pid = dbus_info.GetConnectionUnixProcessID(sender)
+
+        try:
+            subject = ('unix-process', {'pid': dbus.UInt32(pid, variant_level=1), 
+                'start-time': dbus.UInt64(0, variant_level=1)})
+            action_id = privilege            
+            details = {'': ''}
+            flags = dbus.UInt32(1)
+            cancellation_id = ''
+            
+            # we don't need is_challenge return here, since we call with AllowUserInteraction
+            (is_auth, _, details) = self.polkit.CheckAuthorization(subject, action_id, 
+                details, flags, cancellation_id)
+        except dbus.DBusException as e:
+            if e._dbus_error_name == 'org.freedesktop.DBus.Error.ServiceUnknown':
+                # polkitd timed out, connect again
+                self.polkit = None
+                return self.check_polkit_privilege(sender, conn, privilege)
+            else:
+                raise
+
+        if not is_auth:
+            logging.debug('_check_polkit_privilege: sender %s on connection %s pid %i is \
+                not authorized for %s: %s' % (sender, conn, pid, privilege, str(details)))
+            raise self.PermissionDeniedByPolicy(privilege)
+
+if __name__ == '__main__':
+    dbus.mainloop.glib.DBusGMainLoop(set_as_default=True)
+
+    bus = dbus.SystemBus()
+    name = dbus.service.BusName(settings.DBUS_BUS_NAME, bus)
+    
+    controlPanel = BBQLinuxControlPanel(bus)
+    
+    object = JavaSwitcher(controlPanel, '/JavaSwitcher')
+    object = PythonSwitcher(controlPanel, '/PythonSwitcher')
+
+    mainloop = GLib.MainLoop()
+    mainloop.run()

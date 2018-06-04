@@ -1,0 +1,4 @@
+[D-BUS Service]
+Name=org.bbqlinux.ControlPanel
+Exec=/usr/bin/bbqlinux-control-panel-service
+User=root
