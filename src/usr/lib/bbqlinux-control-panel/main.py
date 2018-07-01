@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -25,5 +25,5 @@ from ui.qt_interface import ControlPanelWindow
 # main entry
 if __name__ == "__main__":
     app = QtGui.QApplication(sys.argv)
-    win = ControlPanelWindow(dbus.SystemBus())
+    win = ControlPanelWindow(sys.argv[1:], dbus.SystemBus())
     sys.exit(app.exec_())

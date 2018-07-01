@@ -21,6 +21,7 @@ import os
 import string
 import settings
 import qt_resources_rc
+import argparse
 
 from PyQt4 import QtGui, QtCore, uic
 
@@ -29,45 +30,64 @@ class ControlPanelWindow(QtGui.QMainWindow):
     PAGE_WELCOME = 0
     PAGE_ENVIRONMENT = 1
 
-    def __init__(self, system_bus):
+    def __init__(self, sysargv, system_bus):
+        # Init
         QtGui.QMainWindow.__init__(self)
-        self.ui = uic.loadUi('/usr/share/bbqlinux-control-panel/qt_interface.ui')
-
-        # Set window title
-        self.ui.setWindowTitle("BBQLinux Control Panel")
-        self.ui.setWindowIcon(QtGui.QIcon('/usr/share/bbqlinux/icons/bbqlinux_icon_blue_32x32.png'))
 
         # Get available java versions from backend service
         self.javaSwitcherProxy = system_bus.get_object(settings.DBUS_BUS_NAME, "/JavaSwitcher")
         self.java_available = self.javaSwitcherProxy.GetAvailableJavaVersions()
-        print("Java versions available: %s" % self.java_available)
+        #print("Java versions available: %s" % self.java_available)
 
         # Get available python versions from backend service
         self.pythonSwitcherProxy = system_bus.get_object(settings.DBUS_BUS_NAME, "/PythonSwitcher")
         self.python_available = self.pythonSwitcherProxy.GetAvailablePythonVersions()
-        print("Python versions available: %s" % self.python_available)
+        #print("Python versions available: %s" % self.python_available)
 
-        # Switch to environment page
-        self.showPageEnvironment()
+        # CLI parser
+        cli_parser = argparse.ArgumentParser(description='BBQLinux Control Panel')
+        cli_parser.add_argument('-m', '--module', default=argparse.SUPPRESS, help='javaswitcher, pythonswitcher')
+        cli_args = cli_parser.parse_args(args=sysargv[0:2])
 
-        # Show the window
-        self.ui.show()
-        
-        # Move main window to center
-        qr = self.ui.frameGeometry()
-        cp = QtGui.QDesktopWidget().availableGeometry().center()
-        qr.moveCenter(cp)
-        self.ui.move(qr.topLeft())
+        if hasattr(cli_args, 'module'):
+            if (cli_args.module == "javaswitcher"):
+                # Nothing
+                print('Nothing to see here.')
+                sys.exit()
+            elif (cli_args.module == "pythonswitcher"):
+                self.python_parse_cli_args(sysargv[2:])
+            else:
+                print('Invalid module. Valid options: javaswitcher, pythonswitcher')
+            sys.exit()
+        else:
+            # UI
+            self.ui = uic.loadUi('/usr/share/bbqlinux-control-panel/qt_interface.ui')
 
-        # Connect the buttons
-        self.connect(self.ui.pushButton_quit, QtCore.SIGNAL("clicked()"), QtGui.qApp, QtCore.SLOT("quit()"))
-        self.connect(self.ui.pushButton_pageSelector_environment, QtCore.SIGNAL("clicked()"), self.pushButton_pageSelector_environment_clicked)
+            # Set window title
+            self.ui.setWindowTitle("BBQLinux Control Panel")
+            self.ui.setWindowIcon(QtGui.QIcon('/usr/share/bbqlinux/icons/bbqlinux_icon_blue_32x32.png'))
 
-        # Connect java switcher buttons
-        self.connect(self.ui.comboBox_java, QtCore.SIGNAL("activated(int)"), self.comboBox_java_activated)
+            # Switch to environment page
+            self.showPageEnvironment()
 
-        # Connect python switcher buttons
-        self.connect(self.ui.comboBox_python, QtCore.SIGNAL("activated(int)"), self.comboBox_python_activated)
+            # Show the window
+            self.ui.show()
+            
+            # Move main window to center
+            qr = self.ui.frameGeometry()
+            cp = QtGui.QDesktopWidget().availableGeometry().center()
+            qr.moveCenter(cp)
+            self.ui.move(qr.topLeft())
+
+            # Connect the buttons
+            self.connect(self.ui.pushButton_quit, QtCore.SIGNAL("clicked()"), QtGui.qApp, QtCore.SLOT("quit()"))
+            self.connect(self.ui.pushButton_pageSelector_environment, QtCore.SIGNAL("clicked()"), self.pushButton_pageSelector_environment_clicked)
+
+            # Connect java switcher buttons
+            self.connect(self.ui.comboBox_java, QtCore.SIGNAL("activated(int)"), self.comboBox_java_activated)
+
+            # Connect python switcher buttons
+            self.connect(self.ui.comboBox_python, QtCore.SIGNAL("activated(int)"), self.comboBox_python_activated)
 
     def getCurrentPageIndex(self):
         ''' Get the current page index '''
@@ -114,6 +134,22 @@ class ControlPanelWindow(QtGui.QMainWindow):
             print("Unsupported Java version: %s" % version)
     
     # Python switcher
+    def python_parse_cli_args(self, sysargv):
+        cli_parser = argparse.ArgumentParser(description='Python Switcher module')
+        cli_parser.add_argument('-v', '--version', type=int, help="Desired Python version", required=True)
+        cli_args = cli_parser.parse_args(sysargv)
+
+        if hasattr(cli_args, 'version'):
+            if cli_args.version in self.python_available:
+                print("Setting default Python version: %s" % cli_args.version)
+                self.pythonSwitcherProxy.SetPythonVersion(cli_args.version, dbus_interface=settings.DBUS_INTERFACE_NAME)
+            else:
+                print("Unsupported Python version: %s" % cli_args.version)
+                print("Python versions available: ", end='')
+                for v in self.python_available:
+                    print("%d " % v, end='')
+                print("")
+
     def comboBox_python_refresh(self, available_versions):
         self.ui.comboBox_python.clear()
         active_version = int(self.pythonSwitcherProxy.GetActivePythonVersion())

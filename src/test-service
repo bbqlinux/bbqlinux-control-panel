@@ -7,4 +7,4 @@ sudo rm -rf /usr/share/bbqlinux-control-panel
 sudo cp -R etc /
 sudo cp -R usr /
 
-python3 /usr/bin/bbqlinux-control-panel-service
+python3 /usr/bin/bbqlinux-control-panel-service $*

@@ -9,4 +9,4 @@ sudo rm -rf /usr/share/bbqlinux-control-panel
 sudo cp -R etc /
 sudo cp -R usr /
 
-su codeworkx -c "/usr/bin/bbqlinux-control-panel"
+su codeworkx -c "/usr/bin/bbqlinux-control-panel $*"

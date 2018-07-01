@@ -1,8 +1,8 @@
 # Maintainer: Daniel Hillenbrand <codeworkx [at] bbqlinux [dot] org>
 
 pkgname=bbqlinux-control-panel
-pkgver=1.0.0
-pkgrel=2
+pkgver=1.0.1
+pkgrel=1
 pkgdesc="BBQLinux Control Panel"
 arch=('any')
 url="https://github.com/bbqlinux/bbqlinux-control-panel"

@@ -14,5 +14,5 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-# Launch bbqlinux-python-switcher with all passed arguments (future reserved)
+# Launch bbqlinux-control-panel with all passed arguments (future reserved)
 /usr/bin/python3 -tt /usr/lib/bbqlinux-control-panel/main.py $*
