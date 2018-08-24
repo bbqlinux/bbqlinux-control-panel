@@ -19,11 +19,11 @@ sys.path.append('/usr/lib/bbqlinux-control-panel')
 import dbus
 import settings
 
-from PyQt4 import QtGui, QtCore, uic
+from PyQt5 import QtCore, QtWidgets
 from ui.qt_interface import ControlPanelWindow
 
 # main entry
 if __name__ == "__main__":
-    app = QtGui.QApplication(sys.argv)
+    app = QtWidgets.QApplication(sys.argv)
     win = ControlPanelWindow(sys.argv[1:], dbus.SystemBus())
     sys.exit(app.exec_())
